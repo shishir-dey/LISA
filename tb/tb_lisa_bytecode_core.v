@@ -28,7 +28,7 @@ module tb_lisa_bytecode_core;
         .pred_tag_debug(pred_tag_debug)
     );
 
-    reg [7:0] program [0:88];
+    reg [7:0] program_mem [0:88];
     reg [31:0] stored_word;
     integer i;
     integer timeout;
@@ -43,7 +43,7 @@ module tb_lisa_bytecode_core;
         prog_data = 8'h00;
 
         for (i = 0; i <= 88; i = i + 1) begin
-            program[i] = 8'h00;
+            program_mem[i] = 8'h00;
         end
 
         // Example LLVM-like bytecode program (addresses in comments):
@@ -64,72 +64,74 @@ module tb_lisa_bytecode_core;
         // 0x0056:  ret %10
 
         // %1 = iconst 5
-        program[0]  = 8'h01; program[1]  = 8'h07; program[2]  = 8'h01;
-        program[3]  = 8'h05; program[4]  = 8'h00; program[5]  = 8'h00; program[6]  = 8'h00;
+        program_mem[0]  = 8'h01; program_mem[1]  = 8'h07; program_mem[2]  = 8'h01;
+        program_mem[3]  = 8'h05; program_mem[4]  = 8'h00; program_mem[5]  = 8'h00; program_mem[6]  = 8'h00;
 
         // %2 = iconst 7
-        program[7]  = 8'h01; program[8]  = 8'h07; program[9]  = 8'h02;
-        program[10] = 8'h07; program[11] = 8'h00; program[12] = 8'h00; program[13] = 8'h00;
+        program_mem[7]  = 8'h01; program_mem[8]  = 8'h07; program_mem[9]  = 8'h02;
+        program_mem[10] = 8'h07; program_mem[11] = 8'h00; program_mem[12] = 8'h00; program_mem[13] = 8'h00;
 
         // %3 = add %1, %2
-        program[14] = 8'h02; program[15] = 8'h05; program[16] = 8'h03;
-        program[17] = 8'h01; program[18] = 8'h02;
+        program_mem[14] = 8'h02; program_mem[15] = 8'h05; program_mem[16] = 8'h03;
+        program_mem[17] = 8'h01; program_mem[18] = 8'h02;
 
         // %4 = iconst 16
-        program[19] = 8'h01; program[20] = 8'h07; program[21] = 8'h04;
-        program[22] = 8'h10; program[23] = 8'h00; program[24] = 8'h00; program[25] = 8'h00;
+        program_mem[19] = 8'h01; program_mem[20] = 8'h07; program_mem[21] = 8'h04;
+        program_mem[22] = 8'h10; program_mem[23] = 8'h00; program_mem[24] = 8'h00; program_mem[25] = 8'h00;
 
         // store %3, %4
-        program[26] = 8'h06; program[27] = 8'h04; program[28] = 8'h03; program[29] = 8'h04;
+        program_mem[26] = 8'h06; program_mem[27] = 8'h04; program_mem[28] = 8'h03; program_mem[29] = 8'h04;
 
         // %5 = load %4
-        program[30] = 8'h05; program[31] = 8'h04; program[32] = 8'h05; program[33] = 8'h04;
+        program_mem[30] = 8'h05; program_mem[31] = 8'h04; program_mem[32] = 8'h05; program_mem[33] = 8'h04;
 
         // %6 = iconst 10
-        program[34] = 8'h01; program[35] = 8'h07; program[36] = 8'h06;
-        program[37] = 8'h0A; program[38] = 8'h00; program[39] = 8'h00; program[40] = 8'h00;
+        program_mem[34] = 8'h01; program_mem[35] = 8'h07; program_mem[36] = 8'h06;
+        program_mem[37] = 8'h0A; program_mem[38] = 8'h00; program_mem[39] = 8'h00; program_mem[40] = 8'h00;
 
         // %7 = sub %5, %6
-        program[41] = 8'h03; program[42] = 8'h05; program[43] = 8'h07;
-        program[44] = 8'h05; program[45] = 8'h06;
+        program_mem[41] = 8'h03; program_mem[42] = 8'h05; program_mem[43] = 8'h07;
+        program_mem[44] = 8'h05; program_mem[45] = 8'h06;
 
         // br %7, target_true=0x0037, target_false=0x0043, tags=(1,2)
-        program[46] = 8'h07; program[47] = 8'h09; program[48] = 8'h07;
-        program[49] = 8'h37; program[50] = 8'h00;
-        program[51] = 8'h43; program[52] = 8'h00;
-        program[53] = 8'h01; program[54] = 8'h02;
+        program_mem[46] = 8'h07; program_mem[47] = 8'h09; program_mem[48] = 8'h07;
+        program_mem[49] = 8'h37; program_mem[50] = 8'h00;
+        program_mem[51] = 8'h43; program_mem[52] = 8'h00;
+        program_mem[53] = 8'h01; program_mem[54] = 8'h02;
 
         // %8 = iconst 100
-        program[55] = 8'h01; program[56] = 8'h07; program[57] = 8'h08;
-        program[58] = 8'h64; program[59] = 8'h00; program[60] = 8'h00; program[61] = 8'h00;
+        program_mem[55] = 8'h01; program_mem[56] = 8'h07; program_mem[57] = 8'h08;
+        program_mem[58] = 8'h64; program_mem[59] = 8'h00; program_mem[60] = 8'h00; program_mem[61] = 8'h00;
 
         // jmp 0x004F, tag1
-        program[62] = 8'h08; program[63] = 8'h05; program[64] = 8'h4F;
-        program[65] = 8'h00; program[66] = 8'h01;
+        program_mem[62] = 8'h08; program_mem[63] = 8'h05; program_mem[64] = 8'h4F;
+        program_mem[65] = 8'h00; program_mem[66] = 8'h01;
 
         // %9 = iconst 200
-        program[67] = 8'h01; program[68] = 8'h07; program[69] = 8'h09;
-        program[70] = 8'hC8; program[71] = 8'h00; program[72] = 8'h00; program[73] = 8'h00;
+        program_mem[67] = 8'h01; program_mem[68] = 8'h07; program_mem[69] = 8'h09;
+        program_mem[70] = 8'hC8; program_mem[71] = 8'h00; program_mem[72] = 8'h00; program_mem[73] = 8'h00;
 
         // jmp 0x004F, tag2
-        program[74] = 8'h08; program[75] = 8'h05; program[76] = 8'h4F;
-        program[77] = 8'h00; program[78] = 8'h02;
+        program_mem[74] = 8'h08; program_mem[75] = 8'h05; program_mem[76] = 8'h4F;
+        program_mem[77] = 8'h00; program_mem[78] = 8'h02;
 
         // %10 = phi %8(tag1), %9(tag2)
-        program[79] = 8'h0A; program[80] = 8'h07; program[81] = 8'h0A;
-        program[82] = 8'h08; program[83] = 8'h09; program[84] = 8'h01; program[85] = 8'h02;
+        program_mem[79] = 8'h0A; program_mem[80] = 8'h07; program_mem[81] = 8'h0A;
+        program_mem[82] = 8'h08; program_mem[83] = 8'h09; program_mem[84] = 8'h01; program_mem[85] = 8'h02;
 
         // ret %10
-        program[86] = 8'h09; program[87] = 8'h03; program[88] = 8'h0A;
+        program_mem[86] = 8'h09; program_mem[87] = 8'h03; program_mem[88] = 8'h0A;
 
         // Load the program while reset is asserted.
         for (i = 0; i <= 88; i = i + 1) begin
+            @(negedge clk);
             prog_addr = i[15:0];
-            prog_data = program[i];
+            prog_data = program_mem[i];
             prog_we   = 1'b1;
             @(posedge clk);
-            prog_we   = 1'b0;
         end
+        @(negedge clk);
+        prog_we = 1'b0;
 
         @(posedge clk);
         @(posedge clk);
