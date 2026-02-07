@@ -4,7 +4,7 @@
 module lisa_decoder (
     input  wire [7:0]                    opcode,
     input  wire [7:0]                    inst_len,
-    input  wire [`LLVM_MAX_FETCH_BYTES*8-1:0] inst_bytes,
+    input  wire [7*8-1:0]                inst_bytes,
     input  wire                          len_valid,
 
     output reg  [4:0]                    uop,
@@ -20,13 +20,13 @@ module lisa_decoder (
     output reg                           illegal
 );
     // Fixed byte positions within the fetch window.
-    wire [7:0] b2 = inst_bytes[23:16];
-    wire [7:0] b3 = inst_bytes[31:24];
-    wire [7:0] b4 = inst_bytes[39:32];
-    wire [7:0] b5 = inst_bytes[47:40];
-    wire [7:0] b6 = inst_bytes[55:48];
-    wire [7:0] b7 = inst_bytes[63:56];
-    wire [7:0] b8 = inst_bytes[71:64];
+    wire [7:0] b2 = inst_bytes[7:0];
+    wire [7:0] b3 = inst_bytes[15:8];
+    wire [7:0] b4 = inst_bytes[23:16];
+    wire [7:0] b5 = inst_bytes[31:24];
+    wire [7:0] b6 = inst_bytes[39:32];
+    wire [7:0] b7 = inst_bytes[47:40];
+    wire [7:0] b8 = inst_bytes[55:48];
 
     always @(*) begin
         uop          = `LLVM_UOP_NOP;

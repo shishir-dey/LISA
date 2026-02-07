@@ -30,7 +30,7 @@ module lisa_bytecode_core (
     reg  [7:0]  inst_opcode_q;
     reg  [7:0]  inst_len_q;
     reg         inst_len_valid_q;
-    reg  [`LLVM_MAX_FETCH_BYTES*8-1:0] inst_bytes_q;
+    reg  [7*8-1:0] inst_bytes_q;
 
     reg         exec_wen_q;
     reg  [7:0]  exec_dest_q;
@@ -52,9 +52,9 @@ module lisa_bytecode_core (
     // Instruction path: byte-addressable IMEM -> fetch window -> decoder
     // ---------------------------------------------------------------------
     wire [`LLVM_MAX_FETCH_BYTES*8-1:0] imem_fetch_window;
+    wire unused_imem_fetch_high = &imem_fetch_window[`LLVM_MAX_FETCH_BYTES*8-1:72];
     wire [7:0] fetch_opcode;
     wire [7:0] fetch_len;
-    wire [`LLVM_MAX_FETCH_BYTES*8-1:0] fetch_bytes;
     wire       fetch_len_valid;
 
     lisa_imem #(
@@ -72,10 +72,9 @@ module lisa_bytecode_core (
     lisa_fetch_unit #(
         .MAX_BYTES(`LLVM_MAX_FETCH_BYTES)
     ) fetch_u (
-        .fetch_window(imem_fetch_window),
+        .fetch_window(imem_fetch_window[15:0]),
         .opcode(fetch_opcode),
         .inst_len(fetch_len),
-        .inst_bytes(fetch_bytes),
         .len_valid(fetch_len_valid)
     );
 
@@ -114,10 +113,6 @@ module lisa_bytecode_core (
     // ---------------------------------------------------------------------
     wire [31:0] rf_rdata0;
     wire [31:0] rf_rdata1;
-    wire [31:0] rf_rdata2;
-    wire        rf_rvalid0;
-    wire        rf_rvalid1;
-    wire        rf_rvalid2;
 
     wire rf_wen = (state_q == ST_WB) && exec_wen_q;
 
@@ -126,13 +121,8 @@ module lisa_bytecode_core (
         .rst(rst),
         .raddr0(dec_src_a),
         .raddr1(dec_src_b),
-        .raddr2(8'h00),
         .rdata0(rf_rdata0),
         .rdata1(rf_rdata1),
-        .rdata2(rf_rdata2),
-        .rvalid0(rf_rvalid0),
-        .rvalid1(rf_rvalid1),
-        .rvalid2(rf_rvalid2),
         .wen(rf_wen),
         .waddr(exec_dest_q),
         .wdata(exec_result_q)
@@ -154,7 +144,7 @@ module lisa_bytecode_core (
     // ---------------------------------------------------------------------
     wire        lsu_do_load  = (dec_uop == `LLVM_UOP_LOAD);
     wire        lsu_do_store = (dec_uop == `LLVM_UOP_STORE);
-    wire [31:0] lsu_addr_src = lsu_do_store ? rf_rdata1 : rf_rdata0;
+    wire [15:0] lsu_addr_src = lsu_do_store ? rf_rdata1[15:0] : rf_rdata0[15:0];
 
     wire [15:0] lsu_mem_addr;
     wire        lsu_mem_we;
@@ -214,7 +204,7 @@ module lisa_bytecode_core (
     // ---------------------------------------------------------------------
     // Multi-cycle control FSM: fetch -> decode -> execute -> writeback
     // ---------------------------------------------------------------------
-    always @(posedge clk or posedge rst) begin
+    always @(posedge clk) begin
         if (rst) begin
             state_q          <= ST_FETCH;
             pc_q             <= 16'h0000;
@@ -223,7 +213,7 @@ module lisa_bytecode_core (
             inst_opcode_q    <= 8'h00;
             inst_len_q       <= 8'h00;
             inst_len_valid_q <= 1'b0;
-            inst_bytes_q     <= {(`LLVM_MAX_FETCH_BYTES*8){1'b0}};
+            inst_bytes_q     <= {(7*8){1'b0}};
 
             exec_wen_q       <= 1'b0;
             exec_dest_q      <= 8'h00;
@@ -250,7 +240,7 @@ module lisa_bytecode_core (
                     inst_opcode_q    <= fetch_opcode;
                     inst_len_q       <= fetch_len;
                     inst_len_valid_q <= fetch_len_valid;
-                    inst_bytes_q     <= fetch_bytes;
+                    inst_bytes_q     <= imem_fetch_window[71:16];
                     state_q          <= ST_DECODE;
                 end
 
