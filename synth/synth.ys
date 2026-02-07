@@ -1,0 +1,22 @@
+# LISA Yosys synthesis script
+# Generates a synthesized gate-level style netlist for the core.
+
+read_verilog rtl/*.v
+
+# Keep the synthesis entrypoint explicit.
+hierarchy -check -top lisa_bytecode_core
+
+# Standard generic synthesis flow.
+proc
+opt
+fsm
+opt
+memory
+opt
+techmap
+opt
+
+# Report and emit artifacts.
+check
+stat -top lisa_bytecode_core
+write_verilog -noattr synth/reports/lisa_bytecode_core_synth.v

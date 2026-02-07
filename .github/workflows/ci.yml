@@ -1,0 +1,26 @@
+name: LISA CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y iverilog yosys verilator
+
+      - name: Make runner executable
+        run: |
+          chmod +x run.sh
+
+      - name: Run CI flow
+        run: |
+          ./run.sh ci
