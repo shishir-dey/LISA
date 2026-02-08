@@ -1,4 +1,10 @@
-# LISA: LLVM ISA Native Core (Verilog)
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="assets/LISA-logo-dark.png" width="640">
+  <source media="(prefers-color-scheme: light)" srcset="assets/LISA-logo-light.png" width="640">
+  <img alt="LISA logo" src="assets/LISA-logo-light.png" width="640">
+</picture>
+</div>
 
 LISA (inspired by LLVM ISA) is a small synthesizable processor whose architectural instruction stream is a simplified LLVM-like bytecode format.
 
